@@ -1,0 +1,107 @@
+REPORT Z_CLIENTS_ALV.
+
+* Declaring types:
+
+types: begin of ty_vbak,
+       vbeln type vbak-vbeln,
+       erdat type vbak-erdat,
+       erzet type vbak-erzet,
+       ernam type vbak-ernam,
+       posnr type vbap-posnr,
+       matnr type vbap-matnr,
+       matkl type vbap-matkl,
+       arktx type vbap-arktx,
+       end of ty_vbak.
+
+* Declaring Data:
+
+data: ti_vbak type table of ty_vbak,
+      ti_fieldcat type slis_t_fieldcat_alv.
+
+data: wa_fieldcat type slis_fieldcat_alv.
+
+* Declaring Tables:
+
+Tables vbak.
+
+* Selection screen:
+
+select-OPTIONS s_vbeln for vbak-vbeln.
+
+START-OF-SELECTION.
+
+* Performs:
+
+perform f_select_data.
+
+perform f_fill_out_fieldcat using: 1 'VBELN' 'TI_VBAK' 10 text-t01,
+                                   2 'ERDAT' 'TI_VBAK' 8 text-t02,
+                                   3 'ERZET' 'TI_VBAK' 6 text-t03,
+                                   4 'ERNAM' 'TI_VBAK' 12 text-t04,
+                                   5 'POSNR' 'TI_VBAK' 6 text-t05,
+                                   6 'MATNR' 'TI_VBAK' 18 text-t06,
+                                   7 'MATKL' 'TI_VBAK' 9 text-t07,
+                                   8 'ARKTX' 'TI_VBAK' 40 text-t08.
+
+perform f_show_alv.
+
+*&---------------------------------------------------------------------*
+*&      Form  F_SELECT_DATA
+*&---------------------------------------------------------------------*
+
+FORM F_SELECT_DATA .
+
+  select k~vbeln
+         k~erdat
+         k~erzet
+         k~ernam
+         p~posnr
+         p~matnr
+         p~matkl
+         p~arktx
+         from vbak as k
+         inner join vbap as p
+         on k~vbeln = p~vbeln
+         into table ti_vbak
+         where k~vbeln in s_vbeln.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  F_FILL_OUT_FIELDCAT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_1      text
+*      -->P_0070   text
+*      -->P_0071   text
+*      -->P_10     text
+*      -->P_TEXT_T01  text
+*----------------------------------------------------------------------*
+FORM F_FILL_OUT_FIELDCAT  USING P1 P2 P3 P4 P5.
+
+  wa_fieldcat-col_pos = P1.
+  wa_fieldcat-fieldname = P2.
+  wa_fieldcat-tabname = P3.
+  wa_fieldcat-outputlen = P4.
+  wa_fieldcat-seltext_l = P5.
+  append wa_fieldcat to ti_fieldcat.
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*&      Form  F_SHOW_ALV
+
+FORM F_SHOW_ALV .
+
+  CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+   EXPORTING
+     IT_FIELDCAT                       = ti_fieldcat
+
+    TABLES
+      T_OUTTAB                          = ti_vbak
+   EXCEPTIONS
+     PROGRAM_ERROR                     = 1
+     OTHERS                            = 2.
+
+
+ENDFORM.
